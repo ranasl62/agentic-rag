@@ -1,0 +1,6 @@
+# Ollama models used by the system.
+# Pull with: ollama pull <model>
+embedding_model: nomic-embed-text
+chat_model: llama3.2
+# Optional for heavier reasoning:
+# chat_model_fast: phi3

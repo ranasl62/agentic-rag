@@ -1,0 +1,10 @@
+# Qdrant collection configuration
+collections:
+  section_embeddings:
+    vector_size: 768
+    distance: Cosine
+    on_disk: false
+  chunk_embeddings:
+    vector_size: 768
+    distance: Cosine
+    on_disk: false

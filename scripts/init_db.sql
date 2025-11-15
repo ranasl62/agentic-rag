@@ -1,0 +1,2 @@
+-- Optional: extra extensions or roles. Tables are created by SQLAlchemy at startup.
+-- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

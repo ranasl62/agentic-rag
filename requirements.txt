@@ -1,0 +1,38 @@
+# API & async
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+httpx>=0.26.0
+python-multipart>=0.0.6
+
+# Database
+sqlalchemy>=2.0.25
+asyncpg>=0.29.0
+alembic>=1.13.0
+
+# Vector store (use <1.16 so .search() exists; server 1.7.x does not support query_points)
+qdrant-client>=1.7.0,<1.16
+
+# Redis & Celery (Phase 3 async ingestion)
+redis>=5.0.0
+celery[redis]>=5.3.0
+
+# LLM & embeddings (Ollama via HTTP)
+ollama>=0.1.6
+
+# Document parsing
+pypdf>=4.0.0
+ebooklib>=0.18
+beautifulsoup4>=4.12.0
+
+# Text & hashing
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Utilities
+structlog>=24.1.0
+tenacity>=8.2.0
+numpy>=1.26.0
+
+# Phase 6: Prometheus metrics
+prometheus_client>=0.19.0
