@@ -113,7 +113,7 @@ Full RAG path: **upload → list books → search → compare → query**.
 6. **Full pipeline**  
    `POST /query` with natural-language question.
 
-Detailed curl examples: [VALIDATION_PHASE1_PHASE2_PHASE3.md](VALIDATION_PHASE1_PHASE2_PHASE3.md) and [USER_GUIDE.md](USER_GUIDE.md).
+Detailed curl examples: [User guide](USER_GUIDE.md).
 
 ---
 
@@ -135,4 +135,4 @@ Detailed curl examples: [VALIDATION_PHASE1_PHASE2_PHASE3.md](VALIDATION_PHASE1_P
 - **Web UI:** http://localhost:3001 (if Next.js running).
 - **Chat:** `uv run python -m scripts.chat` with `API_BASE_URL` and `AGENT_API_KEY` set.
 
-For phase-by-phase expectations and troubleshooting, see [VALIDATION_PHASE1_PHASE2_PHASE3.md](VALIDATION_PHASE1_PHASE2_PHASE3.md) and [PHASE1_PHASE6_ALIGNMENT.md](PHASE1_PHASE6_ALIGNMENT.md).
+For more examples and troubleshooting, see [User guide](USER_GUIDE.md) and [Deployment](DEPLOYMENT.md).

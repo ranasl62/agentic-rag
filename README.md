@@ -1,27 +1,56 @@
 # Agentic RAG — Multi-Edition Document Analysis
 
-Local-first RAG: drop in PDFs or TXT (books, manuals, reports—anything), search by meaning, compare the same section across editions, and get summaries with citations. We built it to scale (multi-tenant, rate limits, cache, async ingest, Nginx, metrics). See [Overview & scope](docs/OVERVIEW_AND_SCOPE.md) for what it does and what you can feed it.
+Local-first RAG: ingest PDFs or plain text (books, manuals, reports—any domain), search by meaning, compare the same section across editions, and get summaries with citations. Built for production: multi-tenant auth, rate limiting, caching, async ingestion, and horizontal scaling.
 
 ---
 
-## Features
+## How to run
 
-- **Ingestion:** Parse books into book → edition → chapter → section; stable `canonical_section_id`; semantic chunking; embed with Ollama (or OpenAI); store in Postgres + Qdrant.
-- **Vector store:** Qdrant with metadata filtering; section and chunk search; same-section-across-editions and cross-book search.
-- **Agents & tools:** Query Understanding, Retrieval Planning, Section Matching, Comparison, Summarization, Verification. Tools: `search_sections`, `find_same_section_across_editions`, `compare_sections`, `summarize_section`, `list_available_editions`, and more. Strict schemas, testable.
-- **API:** FastAPI — `/search`, `/compare`, `/summarize`, `/books`, `/sections`, `/query` (full pipeline), `/upload/document`, `/ingest/status`, `/health`, `/metrics` (Prometheus).
-- **Production stack (Phases 1–6):** Tenant auth (API key), rate limiting & Redis cache, async ingestion (Celery), Nginx load balancer, PgBouncer, runbooks, Prometheus metrics, structured logging.
+The fastest way is with Docker. You need a `.env` file (copy from `.env.example`) and at least `POSTGRES_PASSWORD` set.
 
----
+```bash
+cp .env.example .env
+# Edit .env: set POSTGRES_PASSWORD
+docker compose up -d
+```
 
-## Requirements
-
-- Docker and Docker Compose
-- (Optional) Ollama on host or in Docker for embeddings and chat
+The API is at **http://localhost:8080** (Swagger at **http://localhost:8080/docs**). For Ollama, run it on the host or with `docker compose --profile with-ollama up -d`, then pull `nomic-embed-text` and `llama3.2`. Full steps, local development, and troubleshooting: **[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)**.
 
 ---
 
-## Quick Start
+## Documentation
+
+| Topic | Document |
+|-------|----------|
+| **How to run** | [Getting started](docs/GETTING_STARTED.md) — Docker and local run, env, Ollama, troubleshooting |
+| **Tools & stack** | [Tech stack](docs/TECH_STACK.md) — Python, FastAPI, Postgres, Qdrant, Redis, Ollama, Celery, Nginx |
+| **Models** | [Models and observability](docs/MODELS_AND_OBSERVABILITY.md) — Ollama, OpenAI, Anthropic; per-task models |
+| **API** | [API reference](docs/api_reference.md) — All endpoints, auth, request/response, examples |
+| **Features** | [Features](docs/FEATURES.md) — Ingestion, search, compare, summarize, agents, auth, scaling |
+
+| For | Docs |
+|-----|------|
+| **Getting started** | [Overview & scope](docs/OVERVIEW_AND_SCOPE.md) · [User guide](docs/USER_GUIDE.md) |
+| **Developers** | [Architecture & design](docs/ARCHITECTURE_AND_DESIGN.md) · [Developer guide](docs/DEVELOPER_GUIDE.md) · [Testing guide](docs/TESTING_GUIDE.md) |
+| **Production** | [Deployment](docs/DEPLOYMENT.md) · [Operations](docs/OPERATIONS.md) |
+
+Full index: [docs/README.md](docs/README.md).
+
+---
+
+## Features (summary)
+
+- **Ingestion:** PDF and TXT → structure (book/edition/chapter/section) → semantic chunking → embeddings (Ollama or OpenAI) → Postgres + Qdrant. Sync or async (Celery).
+- **Search:** Semantic search over sections; filter by tenant, book, edition; optional LLM-generated answer; cache and rate limits.
+- **Compare & summarize:** Same section across editions; summarize one or more sections or run a natural-language summary via the agent pipeline.
+- **Agentic query:** Single natural-language question → query understanding → retrieval plan → tools (search, match, compare, summarize) → verification. Citations included.
+- **Production:** Tenant auth (API key), per-tenant rate limits, Redis cache, Nginx LB, PgBouncer, Prometheus metrics, structured logging.
+
+Details: [Features](docs/FEATURES.md).
+
+---
+
+## Quick start (minimal)
 
 1. **Configure**
 
@@ -102,27 +131,15 @@ Full testing guide (unit + live + E2E + status): **[docs/TESTING_GUIDE.md](docs/
 | `src/ingestion/` | Pipeline, chunking, vehicle_metadata (design). |
 | `scripts/` | create_tenant, backfill_tenant, ingest_book, chat, validate_phase*_live. |
 | `docker/` | Dockerfiles; nginx.conf (Phase 4); PgBouncer via Bitnami in compose. |
-| `docs/` | Architecture, API reference, user guide, **PRODUCTION_ROADMAP_60K.md** (Phases 1–6), phase specs, runbooks. |
+| `docs/` | Getting started, tech stack, models, API reference, features, user guide, deployment, operations. |
 
 ---
 
-## Documentation
+## Contributing and license
 
-Full documentation is split into separate pages and linked below. Start with [Overview & scope](docs/OVERVIEW_AND_SCOPE.md) to understand what the system does and what kind of documents it supports (any PDF/TXT—books, manuals, reports, articles—not limited to repair manuals). **Full index:** [docs/README.md](docs/README.md).
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, testing, and how to send patches.
 
-| Page | Description |
-|------|-------------|
-| **[Overview & scope](docs/OVERVIEW_AND_SCOPE.md)** | What problem we solve, scope (any document type), capabilities, and who the docs are for. |
-| **[User guide](docs/USER_GUIDE.md)** | Upload documents, search, compare two editions, summarize. For end users. |
-| **[Architecture & design](docs/ARCHITECTURE_AND_DESIGN.md)** | How the RAG system is built: components, data flow, design decisions, production stack. |
-| **[Developer guide](docs/DEVELOPER_GUIDE.md)** | Code layout, local setup, config, how to extend (tools, agents, endpoints). |
-| **[Testing guide](docs/TESTING_GUIDE.md)** | How to test the **whole** application: unit tests, live validation scripts, E2E flow (upload → search → compare), manual testing. |
-| **[API reference](docs/api_reference.md)** | Base URL, auth, and curl examples for main endpoints. |
-| **[Production roadmap](docs/PRODUCTION_ROADMAP_60K.md)** | Phases 1–6: auth, rate limit, cache, async ingest, scaling, monitoring. |
-| **[Runbooks](docs/runbooks/)** | add-capacity, backup-restore, failover, monitoring. |
-| **[Phase alignment](docs/PHASE1_PHASE6_ALIGNMENT.md)** | How phases map to docs, scripts, and tests. |
-
-Other docs: [Phase 1 auth](docs/PHASE1_AUTH_TENANTS.md), [Phase 2 rate limit & cache](docs/PHASE2_RATE_LIMIT_CACHE.md), [Phase 3 async ingest](docs/PHASE3_ASYNC_INGESTION.md), [Phase 4 API scaling](docs/PHASE4_API_SCALING.md), [Phase 5 Qdrant/Postgres](docs/PHASE5_QDRANT_POSTGRES_SCALING.md), [Phase 6 monitoring](docs/PHASE6_MONITORING_ALERTS.md), [agent prompts](docs/agent_prompts.md), [models & observability](docs/MODELS_AND_OBSERVABILITY.md), [document scope & vehicle metadata](docs/DOCUMENT_SCOPE_AND_VEHICLE_METADATA.md).
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE). You can use, copy, modify, and distribute it for any purpose, including commercial use.
 
 ---
 
@@ -135,6 +152,3 @@ Other docs: [Phase 1 auth](docs/PHASE1_AUTH_TENANTS.md), [Phase 2 rate limit & c
 
 ---
 
-## License
-
-Use as needed for internal research, legal/academic comparison, or knowledge analysis.

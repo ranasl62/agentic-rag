@@ -1,5 +1,5 @@
 # Main FastAPI app — search, compare, summarize, upload, query pipeline.
-# Phases 1–6: auth, rate limit, cache, async ingest, metrics. See docs/PRODUCTION_ROADMAP_60K.md.
+# Phases 1–6: auth, rate limit, cache, async ingest, metrics. See docs/DEPLOYMENT.md.
 from contextlib import asynccontextmanager
 
 from starlette.middleware.base import BaseHTTPMiddleware

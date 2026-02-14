@@ -1,6 +1,6 @@
 # Overview & Scope
 
-What the Agentic RAG system is, what problem it solves, and what you can do with it.
+What the Agentic RAG system is, what problem it solves, and what you can do with it. The project is **open source**: you can run it yourself, modify it, and use it for any purpose (see [LICENSE](../LICENSE)).
 
 ---
 
@@ -36,8 +36,6 @@ You get **semantic search**, **edition-aware comparison**, and **summarization**
 
 So: **any domain, any document type** that you can provide as PDF or TXT will work. The system does not assume repair manuals; it assumes “documents with optional chapter/section structure and optional multiple editions.”
 
-Optional future extensions (see [Document scope and vehicle metadata](DOCUMENT_SCOPE_AND_VEHICLE_METADATA.md)) add filters like country, brand, language, and vehicle metadata with wildcards—useful for manuals but not required for general use.
-
 ---
 
 ## What can users do?
@@ -58,7 +56,7 @@ All of this works over the **API** (curl, Swagger at `/docs`, or your own app) a
 
 - **End users** (analysts, support, legal, product): Upload documents, search, compare editions, get summaries. Use the [User guide](USER_GUIDE.md) and API/UI.
 - **Developers**: Integrate the API into your app, run locally, extend tools/agents. Use [Architecture & design](ARCHITECTURE_AND_DESIGN.md), [Developer guide](DEVELOPER_GUIDE.md), and [API reference](api_reference.md).
-- **Operators / DevOps**: Deploy and run at scale (auth, rate limits, cache, async ingest, scaling, monitoring). Use [Production roadmap](PRODUCTION_ROADMAP_60K.md) and [Runbooks](runbooks/).
+- **Operators / DevOps**: Deploy and run at scale (auth, rate limits, cache, async ingest, scaling, monitoring). Use [Deployment](DEPLOYMENT.md) and [Operations](OPERATIONS.md).
 
 ---
 
@@ -68,4 +66,4 @@ All of this works over the **API** (curl, Swagger at `/docs`, or your own app) a
 - **I want to understand how it’s built** → [Architecture & design](ARCHITECTURE_AND_DESIGN.md)  
 - **I want to develop or extend it** → [Developer guide](DEVELOPER_GUIDE.md)  
 - **I want to test it** → [Testing guide](TESTING_GUIDE.md)  
-- **I want to run it in production** → [Production roadmap](PRODUCTION_ROADMAP_60K.md) and [Runbooks](runbooks/)
+- **I want to run it in production** → [Deployment](DEPLOYMENT.md) and [Operations](OPERATIONS.md)

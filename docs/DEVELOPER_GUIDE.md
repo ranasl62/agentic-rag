@@ -119,7 +119,7 @@ POSTGRES_HOST=localhost POSTGRES_PORT=5433 uv run python -m scripts.create_tenan
 ### Supporting another document format
 
 - Parsing: add a parser that produces raw text (and optionally structure) in `src/ingestion/` and plug it into the ingestion pipeline. PDF is already handled (text extraction then same path as TXT).
-- Metadata: if you need new fields (e.g. language, country), extend the storage models and Qdrant payloads, and the upload API, as needed. Optional scope (country, brand, vehicle metadata) is described in [Document scope and vehicle metadata](DOCUMENT_SCOPE_AND_VEHICLE_METADATA.md).
+- Metadata: if you need new fields (e.g. language, country), extend the storage models and Qdrant payloads, and the upload API, as needed.
 
 ---
 

@@ -109,10 +109,10 @@ Beyond the core RAG pipeline, the system supports production hardening:
 | **2** | Rate limiting + Redis cache | Per-tenant (and optional per-IP) limits; search/query result cache with TTL. |
 | **3** | Async ingestion | Celery + Redis; upload can return 202 + job_id; `GET /ingest/status/{job_id}`. |
 | **4** | API scaling | Nginx load balancer in front of multiple API replicas; API on port 8080. |
-| **5** | Qdrant + Postgres scaling | PgBouncer for Postgres; sizing and backup/restore runbooks. |
-| **6** | Monitoring | Prometheus `GET /metrics`; structured request logging (request_id, tenant_id, duration); runbooks for alerts and dashboards. |
+| **5** | Qdrant + Postgres scaling | PgBouncer for Postgres; sizing and backup/restore. |
+| **6** | Monitoring | Prometheus `GET /metrics`; structured request logging (request_id, tenant_id, duration). |
 
-Details: [Production roadmap](PRODUCTION_ROADMAP_60K.md) and [Phase 1–6 alignment](PHASE1_PHASE6_ALIGNMENT.md).
+Details: [Deployment](DEPLOYMENT.md) and [Operations](OPERATIONS.md).
 
 ---
 

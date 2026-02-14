@@ -1,4 +1,21 @@
-# Model Configuration & Optional LangChain / LangSmith
+# Models and Observability
+
+How to use different models for chat and embeddings, and optional observability. Model selection is driven by environment variables—no code changes. Restart the API after changing env.
+
+---
+
+## Quick reference
+
+| Goal | What to do |
+|------|------------|
+| Use Ollama for everything | Set `OLLAMA_HOST`, pull `nomic-embed-text` and `llama3.2`. Default. |
+| Different Ollama model per task | Set `OLLAMA_QUERY_MODEL`, `OLLAMA_SUMMARIZE_MODEL`, etc.; unset = use `OLLAMA_CHAT_MODEL`. |
+| Use OpenAI for chat | `CHAT_PROVIDER=openai`, `OPENAI_API_KEY=...`, `OPENAI_CHAT_MODEL=gpt-4o-mini`. |
+| Use Anthropic (Claude) for chat | `CHAT_PROVIDER=anthropic`, `ANTHROPIC_API_KEY=...`, `ANTHROPIC_CHAT_MODEL=claude-3-5-sonnet-20241022`. |
+| Use OpenAI for embeddings | `EMBED_PROVIDER=openai`, `OPENAI_EMBED_MODEL=text-embedding-3-small`. Re-ingest after switching. |
+| Change model anytime | Edit `.env`, restart the API. |
+
+---
 
 ## 1. Per-task Ollama models (built-in)
 
