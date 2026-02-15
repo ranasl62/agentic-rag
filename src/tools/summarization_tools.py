@@ -8,6 +8,7 @@ from typing import Any, List, Optional
 
 from pydantic import Field
 
+from src.llm.chat_client import BaseChatClient
 from src.tools.base_tool import BaseTool, ToolResult, ToolInput
 
 
@@ -32,8 +33,8 @@ class SummarizeSectionTool(BaseTool):
     description = "Summarize a single section concisely with citation."
     input_schema = SummarizeSectionInput
 
-    def __init__(self, ollama_client: Any, prompt_templates: Any) -> None:
-        self._ollama = ollama_client
+    def __init__(self, chat_client: BaseChatClient, prompt_templates: Any) -> None:
+        self._chat_client = chat_client
         self._prompts = prompt_templates
 
     async def execute(
@@ -42,7 +43,7 @@ class SummarizeSectionTool(BaseTool):
         location_path: str = "",
         edition_id: Optional[str] = None,
         max_length: int = 300,
-        **kwargs: Any,
+        **kwargs,
     ) -> ToolResult:
         from config import get_settings
         prompt = self._prompts.summarization(
@@ -51,7 +52,7 @@ class SummarizeSectionTool(BaseTool):
             max_length=max_length,
         )
         try:
-            out = self._ollama.chat_with_system(
+            out = self._chat_client.chat_with_system(
                 model=get_settings().chat_model_for("summarize"),
                 system=self._prompts.SUMMARIZATION_SYSTEM,
                 user=prompt,
@@ -73,15 +74,15 @@ class SummarizeDifferencesTool(BaseTool):
     description = "Summarize differences between the same section across editions."
     input_schema = SummarizeDifferencesInput
 
-    def __init__(self, ollama_client: Any, prompt_templates: Any) -> None:
-        self._ollama = ollama_client
+    def __init__(self, chat_client: BaseChatClient, prompt_templates: Any) -> None:
+        self._chat_client = chat_client
         self._prompts = prompt_templates
 
     async def execute(
         self,
         section_summaries: List[dict],
         max_length: int = 500,
-        **kwargs: Any,
+        **kwargs,
     ) -> ToolResult:
         from config import get_settings
         parts = []
@@ -98,7 +99,7 @@ class SummarizeDifferencesTool(BaseTool):
             max_length=max_length,
         )
         try:
-            out = self._ollama.chat_with_system(
+            out = self._chat_client.chat_with_system(
                 model=get_settings().chat_model_for("summarize"),
                 system=self._prompts.SUMMARIZATION_SYSTEM,
                 user=prompt,
@@ -118,9 +119,9 @@ class SummarizeDifferencesTool(BaseTool):
         )
 
 
-def summarize_section_tool(ollama_client: Any, prompt_templates: Any) -> SummarizeSectionTool:
-    return SummarizeSectionTool(ollama_client, prompt_templates)
+def summarize_section_tool(chat_client: BaseChatClient, prompt_templates: Any) -> SummarizeSectionTool:
+    return SummarizeSectionTool(chat_client, prompt_templates)
 
 
-def summarize_differences_tool(ollama_client: Any, prompt_templates: Any) -> SummarizeDifferencesTool:
-    return SummarizeDifferencesTool(ollama_client, prompt_templates)
+def summarize_differences_tool(chat_client: BaseChatClient, prompt_templates: Any) -> SummarizeDifferencesTool:
+    return SummarizeDifferencesTool(chat_client, prompt_templates)

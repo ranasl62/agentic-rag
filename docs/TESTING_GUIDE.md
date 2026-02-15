@@ -132,7 +132,7 @@ Detailed curl examples: [User guide](USER_GUIDE.md).
 ## 5. Manual testing
 
 - **Swagger UI:** http://localhost:8080/docs — try /health, /books, /search, /upload/document, /query.
-- **Web UI:** http://localhost:3001 (if Next.js running).
+- **Web UI:** http://localhost:3002 (Docker) or http://localhost:3000 (local dev).
 - **Chat:** `uv run python -m scripts.chat` with `API_BASE_URL` and `AGENT_API_KEY` set.
 
 For more examples and troubleshooting, see [User guide](USER_GUIDE.md) and [Deployment](DEPLOYMENT.md).

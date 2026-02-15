@@ -51,16 +51,56 @@ Pull what you need: `ollama pull <model>` (or `docker exec ollama ollama pull <m
 
 ---
 
-## 2. Changing models anytime
+## 2. Updating other model API keys (OpenAI, Anthropic)
+
+All keys are read from **`.env`** in the project root. Edit `.env` and restart the API for changes to apply.
+
+### OpenAI (chat and/or embeddings)
+
+```env
+# Use OpenAI for chat
+CHAT_PROVIDER=openai
+OPENAI_API_KEY=sk-your-openai-api-key-here
+OPENAI_CHAT_MODEL=gpt-4o-mini
+
+# Optional: custom base URL (e.g. Azure)
+# OPENAI_BASE_URL=https://your-resource.openai.azure.com/openai/deployments/your-deployment
+
+# Use OpenAI for embeddings (re-ingest after switching; dimension becomes 1536)
+EMBED_PROVIDER=openai
+OPENAI_EMBED_MODEL=text-embedding-3-small
+```
+
+Get an API key from [platform.openai.com](https://platform.openai.com/api-keys).
+
+### Anthropic (Claude) for chat
+
+```env
+CHAT_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
+ANTHROPIC_CHAT_MODEL=claude-3-5-sonnet-20241022
+```
+
+Get an API key from [console.anthropic.com](https://console.anthropic.com/). Other models: `claude-3-opus-20240229`, etc.
+
+### Apply changes
+
+- **Local API:** Restart the process (e.g. stop and run `uv run uvicorn src.api.main:app --host 0.0.0.0 --port 8000` again).
+- **Docker:** `docker compose up -d api-service` (and `celery-worker` if you use async ingest).
+
+Never commit `.env` or real keys to git; `.env` is in `.gitignore`.
+
+---
+
+## 3. Changing models anytime (Ollama)
 
 - **Today:** Edit `.env` (or set env in Docker), then restart the API:  
   `docker compose up -d api-service`
 - **No code change** is required; all model names are read from settings at request time.
-- **Future:** You could add an admin API or config reload endpoint to switch models without restart (same `ollama_model_for()` would be used with updated config).
 
 ---
 
-## 3. Optional: LangChain / LangGraph
+## 4. Optional: LangChain / LangGraph
 
 The current stack uses a **custom orchestrator** and **direct Ollama HTTP** for chat and embeddings. You can keep this and still **swap models via env** as above.
 
@@ -84,7 +124,7 @@ If you add LangChain, pin versions (e.g. `langchain-core`, `langchain-ollama`, `
 
 ---
 
-## 4. LangSmith (local / self-hosted)
+## 5. LangSmith (local / self-hosted)
 
 **LangSmith** is used for tracing and debugging LLM runs (prompts, responses, latency, errors). You can use it **locally** in two ways:
 
@@ -138,7 +178,7 @@ Run with: `docker compose --profile with-langsmith up -d`. Then point `LANGCHAIN
 
 ---
 
-## 5. OpenAI and Anthropic (Claude / Opus)
+## 6. OpenAI and Anthropic (Claude / Opus)
 
 You can use **OpenAI** or **Anthropic** for chat instead of (or alongside) Ollama. Embeddings can also use OpenAI.
 
@@ -179,7 +219,7 @@ OPENAI_EMBED_MODEL=text-embedding-3-small
 
 ---
 
-## 6. Summary
+## 7. Summary
 
 | Goal | Approach |
 |------|----------|

@@ -44,6 +44,8 @@ class IngestionPipeline:
         publication_year: Optional[int] = None,
         publisher: Optional[str] = None,
         isbn: Optional[str] = None,
+        book_metadata: Optional[dict] = None,
+        edition_metadata: Optional[dict] = None,
     ) -> tuple[Book, Edition]:
         """Get or create book and edition for the given tenant."""
         stmt = select(Book).where(
@@ -54,7 +56,7 @@ class IngestionPipeline:
         result = await self._session.execute(stmt)
         book = result.scalars().first()
         if not book:
-            book = Book(tenant_id=tenant_id, title=title, author=author, isbn=isbn)
+            book = Book(tenant_id=tenant_id, title=title, author=author, isbn=isbn, metadata_=book_metadata)
             self._session.add(book)
             await self._session.flush()
         version_hash = hashlib.sha256(f"{title}|{author}|{edition_name}".encode()).hexdigest()[:32]
@@ -68,6 +70,7 @@ class IngestionPipeline:
                 publication_year=publication_year,
                 publisher=publisher,
                 version_hash=version_hash,
+                metadata_=edition_metadata,
             )
             self._session.add(edition)
             await self._session.flush()
@@ -143,9 +146,16 @@ class IngestionPipeline:
                     "location_path": loc_path,
                     "chapter_number": block.chapter_number,
                     "section_number": block.section_number,
-                    "content_preview": content[:200],
+                    "content_preview": content[:800],
                     "embedding_type": "heading",
                     "token_count": len(content.split()),
+                    # Book/edition/chapter metadata for display and filtering
+                    "book_title": book.title,
+                    "book_author": book.author,
+                    "edition_name": edition.edition_name,
+                    "publication_year": edition.publication_year,
+                    "chapter_title": block.chapter_title or "",
+                    "section_title": block.section_title or "",
                 },
             )
             chunks = semantic_chunk(content)
@@ -180,6 +190,13 @@ class IngestionPipeline:
                             "canonical_section_id": canonical_id,
                             "chunk_index": idx,
                             "chunk_text": chunk_text[:500],
+                            "book_title": book.title,
+                            "book_author": book.author,
+                            "edition_name": edition.edition_name,
+                            "publication_year": edition.publication_year,
+                            "chapter_title": block.chapter_title or "",
+                            "section_title": block.section_title or "",
+                            "location_path": loc_path,
                         },
                     )
                 ])

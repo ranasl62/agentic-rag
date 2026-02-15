@@ -2,9 +2,21 @@
 
 Complete reference for the Agentic RAG HTTP API. The service exposes REST endpoints for health, document upload, search, comparison, summarization, and a full agentic query pipeline.
 
-**Base URL:** When using Docker with Nginx, the API is at **http://localhost:8080**. When running the API alone (e.g. `uvicorn` on port 8000), use **http://localhost:8000**. Replace the host/port with your deployment URL when applicable.
+**Base URL:** **http://localhost:8000** (API on port 8000). With Docker+Nginx use **http://localhost:8080** (or `API_PORT` in `.env`).
 
-**Interactive docs:** Open **/docs** in your browser (e.g. http://localhost:8080/docs) for Swagger UI, where you can try every endpoint.
+### Key URLs (no auth)
+
+| Purpose | URL |
+|--------|-----|
+| Health | http://localhost:8000/health |
+| Swagger UI | http://localhost:8000/docs |
+| API info | http://localhost:8000/info |
+| Metrics | http://localhost:8000/metrics |
+
+**Interactive docs:** Open **http://localhost:8000/docs** for Swagger UI (use 8080 when behind Nginx).  
+**Metrics:** Returns **404** when `METRICS_ENABLED=false`; set to `true` in `.env` and restart to enable.
+
+![Swagger UI](screenshot/swagger.png)
 
 ---
 
@@ -28,31 +40,25 @@ If you set `REQUIRE_AUTH=false` (e.g. for local development), the API uses a def
 
 ## Endpoints
 
-### Root and info
+### Root, health, info, and metrics
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/` | No | Returns app name, links to `/docs`, `/health`, `/info`. |
-| GET | `/info` | No | Returns app name, version, and flags: `auth_required`, `metrics_enabled`. Useful for operators. |
+| GET | `/` | No | App name and links to `/docs`, `/health`, `/info`. |
 | GET | `/health` | No | Liveness/readiness. Returns `{"status": "ok", "version": "1.0.0"}`. |
-
----
-
-### Health and metrics
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/health` | No | See above. |
+| GET | `/info` | No | App name, version, and flags: `auth_required`, `metrics_enabled`. |
 | GET | `/metrics` | No | Prometheus-format metrics (request count, latency). Returns 404 if `METRICS_ENABLED=false`. |
 
 ---
 
-### Books and sections
+### Books and documents
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/books` | Yes | List all books and their editions for the current tenant. Response: `{ "books": [ { "book_id", "title", "author", "editions": [ { "edition_id", "edition_name", "publication_year" } ] } ] }`. |
-| GET | `/books/sections` | Yes | List sections. Query params: `book_id` (optional), `edition_id` (optional). Response: `{ "sections": [ { "section_id", "edition_id", "canonical_section_id", "location_path", "content_length" } ] }`. |
+| GET | `/books` | Yes | List all books and their editions (legacy). Response: `{ "books": [ { "book_id", "title", "author", "editions": [ ... ] } ] }`. |
+| GET | `/documents` | Yes | List all documents and their editions. Response: `{ "documents": [ { "document_id", "title", "author", "editions": [ ... ] } ] }`. |
+| GET | `/books/sections` | Yes | List sections. Query params: `book_id` (optional), `edition_id` (optional). |
+| GET | `/documents/sections` | Yes | List sections. Query params: `document_id` (optional), `edition_id` (optional). |
 
 ---
 
@@ -60,7 +66,7 @@ If you set `REQUIRE_AUTH=false` (e.g. for local development), the API uses a def
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/upload/document` | Yes | Upload a document as one edition of a book. **Content-Type:** `multipart/form-data`. **Fields:** `file` (required, .txt or .pdf), `title` (required), `author` (required), `edition_name` (required), `publication_year` (optional), `async_mode` (optional: `1` or `true` for async). **Sync:** Returns 200 with `{ "success", "message", "title", "author", "edition_name", "sections_count" }`. **Async:** Returns 202 with `{ "job_id", "message" }`; poll **GET /ingest/status/{job_id}** for status. |
+| POST | `/upload/document` | Yes | Upload a document as one edition of a book. **Content-Type:** `multipart/form-data`. **Fields:** `file` (required, .txt or .pdf), `title` (required), `author` (required), `edition_name` (required), `publication_year` (optional), `async_mode` (optional: `1` or `true` for async). Ingested vectors include book/edition/chapter metadata for better search and display. See [Import and metadata](IMPORT_AND_METADATA.md). **Sync:** Returns 200 with `{ "success", "message", "title", "author", "edition_name", "sections_count" }`. **Async:** Returns 202 with `{ "job_id", "message" }`; poll **GET /ingest/status/{job_id}** for status. |
 | GET | `/ingest/status/{job_id}` | No | Status of an async ingestion job. Returns 200 with `{ "job_id", "status": "pending" \| "completed" \| "failed", ... }` or 404 if not found or expired. |
 
 ---
@@ -69,7 +75,7 @@ If you set `REQUIRE_AUTH=false` (e.g. for local development), the API uses a def
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/search` | Yes | Semantic search over ingested sections. **Body:** `{ "query": "string", "limit": 10, "book_id": "uuid?", "edition_id": "uuid?", "generate_answer": false, "skip_cache": false }`. **Response:** `{ "success", "results": [ { "section_id", "edition_id", "book_id", "location_path", "content_preview", "score" } ], "citations", "answer" (if generate_answer=true) }`. Rate-limited and cached per tenant when enabled. |
+| POST | `/search` | Yes | Semantic search over ingested sections. **Body:** `{ "query": "string", "limit": 10, "document_id": "uuid?", "edition_id": "uuid?", "generate_answer": false, "skip_cache": false }`. **Response:** `{ "success", "results": [ { "section_id", "edition_id", "document_id", "location_path", "content_preview", "score", "book_title", "book_author", "edition_name", "chapter_title", "section_title" } ], "citations": [ { "document_id", "book_title", "chapter_title", "section_title", ... } ], "answer" (if generate_answer=true) }`. Rate-limited and cached per tenant when enabled. |
 
 ---
 
@@ -77,7 +83,7 @@ If you set `REQUIRE_AUTH=false` (e.g. for local development), the API uses a def
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/compare` | Yes | Retrieve the same logical section across one or more editions. **Body:** `{ "book_id": "uuid", "chapter_number": int?, "section_number": int?, "canonical_section_id": "string?", "edition_ids": ["uuid"]? }`. Provide either `(chapter_number, section_number)` or `canonical_section_id`; optionally restrict to `edition_ids`. **Response:** `{ "success", "sections": [ ... ], "canonical_section_id", "citations" }`. |
+| POST | `/compare` | Yes | Retrieve the same logical section across one or more editions. **Body:** `{ "document_id": "uuid" (or "book_id"), "chapter_number": int?, "section_number": int?, "canonical_section_id": "string?", "edition_ids": ["uuid"]? }`. Provide either `document_id` + (chapter_number, section_number) or `canonical_section_id`; optionally restrict to `edition_ids`. **Response:** `{ "success", "sections": [ ... ], "canonical_section_id", "citations" }`. |
 
 ---
 

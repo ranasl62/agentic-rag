@@ -14,7 +14,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-The API is at **http://localhost:8080** (Swagger at **http://localhost:8080/docs**). For Ollama, run it on the host or with `docker compose --profile with-ollama up -d`, then pull `nomic-embed-text` and `llama3.2`. Full steps, local development, and troubleshooting: **[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)**.
+The API is at **http://localhost:8080** (Swagger at **http://localhost:8080/docs**). **Before installing Ollama:** see [Getting started](docs/GETTING_STARTED.md) — you can use **OpenAI or Anthropic only** and skip Ollama; only install Ollama if you want local models. Full steps, local development, and troubleshooting: **[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)**.
 
 ---
 
@@ -65,13 +65,9 @@ Details: [Features](docs/FEATURES.md).
    docker compose up -d
    ```
 
-   This starts **Postgres**, **Qdrant**, **Redis**, **PgBouncer**, **Nginx** (API on port **8080**), **RAG API**, **Celery worker** (optional), and **Next.js web** (default port 3001). The API is reached at **http://localhost:8080** (Nginx). Open the UI at **http://localhost:3001** and the API docs at **http://localhost:8080/docs**.
+   This starts **Postgres**, **Qdrant**, **Redis**, **PgBouncer**, **Nginx** (API on port **8080**), **RAG API**, **Celery worker**, and **Next.js web** (port **3002**). The API is at **http://localhost:8080** (Nginx). Open the UI at **http://localhost:3002** and the API docs at **http://localhost:8080/docs**.
 
-   **Ollama:** Run on the host (port 11434) or in Docker: `docker compose --profile with-ollama up -d` and set `OLLAMA_HOST=http://ollama`. Then:
-
-   ```bash
-   ollama pull nomic-embed-text && ollama pull llama3.2
-   ```
+   **Ollama (optional):** Only if you want local models — run on the host (port 11434) or in Docker: `docker compose --profile with-ollama up -d` and set `OLLAMA_HOST=http://ollama`. Then pull `nomic-embed-text` and `llama3.2`. To use **OpenAI/Anthropic only**, set `CHAT_PROVIDER` and `EMBED_PROVIDER` in `.env` and skip Ollama; see [Getting started](docs/GETTING_STARTED.md).
 
 3. **Create a tenant and API key** (when using auth)
 

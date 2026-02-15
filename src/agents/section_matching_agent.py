@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from src.agents.base_agent import BaseAgent
-from src.llm.ollama_client import OllamaClient
+from src.llm.chat_client import BaseChatClient
 from src.llm.prompt_templates import PromptTemplates
 
 
@@ -16,10 +16,10 @@ class SectionMatchingAgent(BaseAgent):
 
     def __init__(
         self,
-        ollama_client: OllamaClient,
+        chat_client: BaseChatClient,
         prompt_templates: PromptTemplates,
     ) -> None:
-        self._ollama = ollama_client
+        self._chat_client = chat_client
         self._prompts = prompt_templates
 
     async def run(
@@ -46,14 +46,14 @@ class SectionMatchingAgent(BaseAgent):
             semantic_sim=semantic_sim,
         )
         try:
-            out = self._ollama.chat_with_system(
+            out = self._chat_client.chat_with_system(
                 model=get_settings().chat_model_for("query"),
                 system=self._prompts.SECTION_MATCHING_SYSTEM,
                 user=user,
                 temperature=0.1,
                 format="json",
             )
-            parsed = self._ollama.parse_json_response(out)
+            parsed = self._chat_client.parse_json_response(out)
         except Exception as e:
             return {"same_section": False, "confidence": 0.0, "reasoning": str(e)}
         return {

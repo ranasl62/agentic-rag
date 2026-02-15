@@ -30,6 +30,10 @@ A concise overview of the tools and technologies used in Agentic RAG. This helps
 | **Qdrant** | Vector store for embeddings. Used for semantic search and filtering by tenant, book, and edition. |
 | **Redis** | Rate-limit counters, search/query cache (TTL), Celery broker, and ingest job status. |
 
+Qdrant stores section and chunk embeddings; you can inspect collections and points in the Qdrant UI (default http://localhost:6333/dashboard).
+
+![Qdrant](screenshot/drant.png)
+
 ---
 
 ## LLM and embeddings
@@ -66,7 +70,7 @@ See [Models and observability](MODELS_AND_OBSERVABILITY.md) for switching provid
 
 | Tool | Role |
 |------|------|
-| **Next.js** | Optional web UI for uploading documents, searching, and running the query pipeline. Served on port 3001; talks to the API via `NEXT_PUBLIC_API_URL`. |
+| **Next.js** | Web UI for uploading documents, searching, comparing, and running the query pipeline. Served on port **3002** (Docker, via `WEB_PORT`) or 3000 (local dev). Talks to the API via `NEXT_PUBLIC_API_URL`. |
 
 ---
 

@@ -4,11 +4,30 @@ This guide gets the application running on your machine. You can use Docker for 
 
 ---
 
+## First: Do you want to install Ollama?
+
+The API needs a **chat** and **embedding** provider. **Before installing anything**, choose:
+
+- **I want to use OpenAI or Anthropic only (no local Ollama)**  
+  → Set `CHAT_PROVIDER=openai` or `anthropic`, `EMBED_PROVIDER=openai`, and add your API keys in `.env`. **You do not need to install Ollama.** Skip every “Ollama” step in this guide.
+
+- **I want to use local Ollama (or Ollama + cloud later)**  
+  → Follow the Ollama steps below (install Ollama, pull models). You can still switch to OpenAI/Anthropic later by changing `.env`.
+
+| Choice | What you need | Install Ollama? |
+|--------|----------------|-----------------|
+| **OpenAI or Anthropic only** | `CHAT_PROVIDER=openai` or `anthropic`, `EMBED_PROVIDER=openai`, API keys in `.env`. | **No** — skip all Ollama steps. |
+| **Ollama (local)** | Run Ollama on the host or in Docker; no API key. | **Yes** — see “Ollama” steps below. |
+
+If you are not sure, choose **OpenAI/Anthropic only** to get started without installing Ollama. You can switch to Ollama later by setting `CHAT_PROVIDER=ollama` and `EMBED_PROVIDER=ollama` and then installing Ollama.
+
+---
+
 ## Prerequisites
 
 - **Docker and Docker Compose** — for running the full stack (Postgres, Qdrant, Redis, API, optional Nginx and Celery).
 - **Python 3.11+** — if you run the API or scripts on the host (we recommend `uv` or `pip`).
-- **Ollama** (optional but typical) — for embeddings and chat. Run it on the host or in Docker.
+- **Ollama** — only if you chose **Ollama (local)** above. Otherwise skip Ollama entirely.
 
 ---
 
@@ -45,13 +64,13 @@ This starts:
 - **Nginx** (API on port **8080**)
 - **RAG API** (behind Nginx)
 - **Celery worker** (async ingestion)
-- **Next.js web UI** (port 3001)
+- **Next.js web UI** (port 3002, configurable via `WEB_PORT`)
 
-The API is available at **http://localhost:8080**. The interactive API docs (Swagger) are at **http://localhost:8080/docs**.
+API at **http://localhost:8080** (or the port in `API_PORT`). Web UI at **http://localhost:3002**. Key URLs: [docs README](README.md#key-urls) or [API reference](api_reference.md).
 
-### 3. Ollama (embeddings and chat)
+### 3. Ollama (only if you chose “use local Ollama” above)
 
-The API needs an embedding model and a chat model. You can run Ollama on the host or in Docker.
+If you are using **OpenAI/Anthropic only**, skip this step. Otherwise the API needs an embedding model and a chat model. You can run Ollama on the host or in Docker.
 
 **On the host (typical):**
 
@@ -79,13 +98,25 @@ docker compose exec ollama ollama pull llama3.2
 
 ### 4. Create a tenant and API key (when auth is on)
 
-If `REQUIRE_AUTH=true` (default), you need an API key for protected endpoints:
+If `REQUIRE_AUTH=true` (default), you need an API key for protected endpoints. Run the script **inside Docker** so it connects to the right database:
 
 ```bash
-POSTGRES_HOST=localhost POSTGRES_PORT=5433 uv run python -m scripts.create_tenant "My Tenant" my-tenant
+docker compose run --rm api-service python -m scripts.create_tenant "My Tenant" my-tenant
 ```
 
-Use the printed API key in the `X-API-Key` header for all requests. For local dev you can set `REQUIRE_AUTH=false` in `.env` and restart the API to skip the key.
+Or from the host (use port 5433, the published Postgres port):
+
+```bash
+POSTGRES_PORT=5433 uv run python -m scripts.create_tenant "My Tenant" my-tenant
+```
+
+Use the printed API key in the `X-API-Key` header for all requests. To use the key from the **web UI**, set `NEXT_PUBLIC_AGENT_API_KEY=<your key>` in `.env` and rebuild the web container:
+
+```bash
+docker compose build --no-cache web && docker compose up -d web --no-deps
+```
+
+For local dev you can set `REQUIRE_AUTH=false` in `.env` and restart the API to skip the key entirely.
 
 ### 5. Upload a document and query
 
@@ -122,9 +153,9 @@ uv run uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 
 The API will be at **http://localhost:8000**. Open **http://localhost:8000/docs** for Swagger. The API will create tables and a default tenant on startup.
 
-### 4. Ollama
+### 4. Ollama (only if you chose “use local Ollama” above)
 
-Run Ollama on the host (e.g. `ollama serve`) and set in `.env`:
+If you are using **OpenAI/Anthropic only**, skip this step. Otherwise run Ollama on the host (e.g. `ollama serve`) and set in `.env`:
 
 - `OLLAMA_HOST=http://localhost`
 - `OLLAMA_PORT=11434`
@@ -141,10 +172,12 @@ Pull the same models as above (`nomic-embed-text`, `llama3.2`).
 | **QDRANT_*** | Vector store | localhost:6333 |
 | **REDIS_*** | Cache, rate limit, Celery broker | localhost:6379 |
 | **OLLAMA_HOST** | Where the API finds Ollama | http://localhost (host) or http://ollama (Docker) |
-| **OLLAMA_EMBED_MODEL** | Embedding model | nomic-embed-text |
-| **OLLAMA_CHAT_MODEL** | Default chat model | llama3.2 |
+| **CHAT_PROVIDER** | Chat LLM provider | ollama (also: openai, anthropic) |
+| **EMBED_PROVIDER** | Embedding provider | ollama (also: openai) |
+| **OPENAI_API_KEY** | OpenAI key (when provider=openai) | — |
 | **REQUIRE_AUTH** | Require X-API-Key | true |
-| **API_PORT** | Port the API listens on | 8080 (with Nginx) or 8000 (standalone) |
+| **API_PORT** | Nginx published port | 8080 |
+| **WEB_PORT** | Next.js web UI port | 3002 |
 
 For chat and embeddings you can switch to OpenAI or Anthropic; see [Models and observability](MODELS_AND_OBSERVABILITY.md).
 
@@ -152,9 +185,15 @@ For chat and embeddings you can switch to OpenAI or Anthropic; see [Models and o
 
 ## Troubleshooting
 
-- **API won’t start:** Check that Postgres, Qdrant, and Redis are reachable (host/port in `.env`). If you use Docker for DBs, use the host port (e.g. 5433 for Postgres).
-- **“Connection refused” to Ollama:** Ensure Ollama is running and `OLLAMA_HOST`/`OLLAMA_PORT` match. From inside a container use `http://host.docker.internal` for the host.
-- **401 on requests:** When `REQUIRE_AUTH=true`, send a valid `X-API-Key` or create a tenant with `scripts/create_tenant.py`.
-- **Empty search results:** Confirm you’ve uploaded documents for the tenant whose API key you’re using, and that the embedding model matches the one used at ingestion time.
+- **API won't start:** Check Postgres, Qdrant, Redis are reachable. Run `docker compose logs api-service --tail 80`.
+- **Which port?** Docker + Nginx = **8080**. Local API = **8000**.
+- **401 "Invalid or missing API key":** Create a tenant: `docker compose run --rm api-service python -m scripts.create_tenant "My Tenant" my-tenant`. For the web UI set `NEXT_PUBLIC_AGENT_API_KEY` in `.env` and rebuild: `docker compose build --no-cache web && docker compose up -d web --no-deps`.
+- **`create_tenant` auth failed:** Postgres in Docker publishes on port **5433**. Use `POSTGRES_PORT=5433` or run inside Docker (step 4).
+- **CORS errors:** Handled by FastAPI. Nginx must not add duplicate CORS headers.
+- **413 on upload:** Increase `client_max_body_size` in `docker/nginx.conf` `/upload/` block.
+- **504 timeout on upload:** Documents are processed asynchronously via Celery. Ensure the worker runs: `docker compose up -d celery-worker`.
+- **Empty search results:** Upload documents first. Verify you use the correct tenant API key.
+- **Tenant lost after restart:** Use `docker compose stop`/`start` instead of `docker compose down`.
+- **UI shows wrong provider:** Check `CHAT_PROVIDER` in `.env`, restart the API, refresh browser.
 
-For more detail, see [Developer guide](DEVELOPER_GUIDE.md) and [Operations](OPERATIONS.md).
+More: [Developer guide](DEVELOPER_GUIDE.md), [Operations](OPERATIONS.md).

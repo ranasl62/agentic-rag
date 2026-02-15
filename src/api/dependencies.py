@@ -38,15 +38,15 @@ def get_tools_dict() -> Dict[str, object]:
     """Build tool instances with injected deps. Keys = tool name for orchestrator."""
     qdrant = get_qdrant_storage()
     embedding = get_embedding_service()
-    ollama = get_chat_client()
+    chat_client = get_chat_client()
     prompts = PromptTemplates()
     search_tool = SearchSectionsTool(qdrant, embedding, session_scope)
     find_same_tool = FindSameSectionAcrossEditionsTool(qdrant, session_scope)
     list_editions_tool = ListAvailableEditionsTool(session_scope)
     match_tool = MatchSectionsTool(session_scope)
     compare_tool = CompareSectionsTool()
-    sum_section_tool = SummarizeSectionTool(ollama, prompts)
-    sum_diff_tool = SummarizeDifferencesTool(ollama, prompts)
+    sum_section_tool = SummarizeSectionTool(chat_client, prompts)
+    sum_diff_tool = SummarizeDifferencesTool(chat_client, prompts)
     return {
         "search_sections": search_tool,
         "find_same_section_across_editions": find_same_tool,
@@ -59,16 +59,16 @@ def get_tools_dict() -> Dict[str, object]:
 
 
 def get_orchestrator() -> Orchestrator:
-    ollama = get_chat_client()
+    chat_client = get_chat_client()
     prompts = PromptTemplates()
     tools = get_tools_dict()
     list_tool = tools["list_available_editions"]
     return Orchestrator(
-        query_agent=QueryUnderstandingAgent(ollama, prompts),
-        retrieval_agent=RetrievalPlanningAgent(ollama, prompts),
-        comparison_agent=ComparisonAgent(ollama, prompts),
-        summarization_agent=SummarizationAgent(ollama, prompts),
-        verification_agent=VerificationAgent(ollama, prompts),
+        query_agent=QueryUnderstandingAgent(chat_client, prompts),
+        retrieval_agent=RetrievalPlanningAgent(chat_client, prompts),
+        comparison_agent=ComparisonAgent(chat_client, prompts),
+        summarization_agent=SummarizationAgent(chat_client, prompts),
+        verification_agent=VerificationAgent(chat_client, prompts),
         tools=tools,
         list_editions_tool=list_tool,
     )

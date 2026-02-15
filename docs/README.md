@@ -1,54 +1,49 @@
 # Documentation
 
-Documentation for **Agentic RAG**: ingest documents (PDF/TXT), search by meaning, compare editions, and summarize with citations. Open source and self-hosted.
+**Agentic RAG**: ingest documents (PDF/TXT), search by meaning, compare editions, summarize with citations. Open source and self-hosted.
 
 ---
 
-## How to run and what's inside
+## Key URLs
 
-| Document | Description |
-|----------|-------------|
-| [**Getting started**](GETTING_STARTED.md) | How to run: Docker and local API, env, Ollama, tenant setup, troubleshooting. |
-| [**Tech stack**](TECH_STACK.md) | Tools: Python, FastAPI, Postgres, Qdrant, Redis, Ollama, Celery, Nginx. |
-| [**Models and observability**](MODELS_AND_OBSERVABILITY.md) | Ollama, OpenAI, Anthropic; per-task models; optional LangSmith. |
-| [**API reference**](api_reference.md) | Every endpoint, auth, request/response, examples. |
-| [**Features**](FEATURES.md) | All features: ingestion, search, compare, agents, auth, scaling. |
+| Purpose | Docker (Nginx) | Local API |
+|---------|---------------|-----------|
+| Health | http://localhost:8080/health | http://localhost:8000/health |
+| Swagger UI | http://localhost:8080/docs | http://localhost:8000/docs |
+| API info | http://localhost:8080/info | http://localhost:8000/info |
+| Metrics | http://localhost:8080/metrics | http://localhost:8000/metrics |
+| Web UI | http://localhost:3002 | http://localhost:3000 |
 
----
-
-## For everyone
-
-| Document | Description |
-|----------|-------------|
-| [**Overview & scope**](OVERVIEW_AND_SCOPE.md) | What the system does, what documents it supports (any PDF/TXT), and who it’s for. |
-| [**User guide**](USER_GUIDE.md) | Upload documents, search, and compare two editions step by step. |
+**Port:** With Docker + Nginx the API is on **8080** (configurable via `API_PORT` in `.env`). Without Docker use **8000**.
+`/metrics` returns 404 when `METRICS_ENABLED=false`; set `METRICS_ENABLED=true` and restart to enable.
 
 ---
 
-## For developers
+## Docs
 
-| Document | Description |
-|----------|-------------|
-| [**Architecture & design**](ARCHITECTURE_AND_DESIGN.md) | How the system is built: API, orchestrator, agents, tools, storage, and data flow. |
-| [**Developer guide**](DEVELOPER_GUIDE.md) | Code layout, local setup, config, and how to extend (tools, agents, endpoints). |
-| [**Testing guide**](TESTING_GUIDE.md) | Unit tests, live validation scripts, E2E flow, and quick reference. |
-| [**API reference**](api_reference.md) | Base URL, auth, and curl examples for main endpoints. |
+| Doc | Description |
+|-----|-------------|
+| [Getting started](GETTING_STARTED.md) | Run with Docker or local API; env, providers, tenant setup. |
+| [User guide](USER_GUIDE.md) | Upload, search, compare editions via API and web UI. |
+| [Overview & scope](OVERVIEW_AND_SCOPE.md) | What it does, what documents it supports. |
+| [API reference](api_reference.md) | Endpoints, auth, request/response examples. |
+| [Features](FEATURES.md) | Ingestion, search, compare, agents, auth, async upload. |
+| [Tech stack](TECH_STACK.md) | Python, FastAPI, Postgres, Qdrant, Redis, Nginx. |
+| [Models & observability](MODELS_AND_OBSERVABILITY.md) | OpenAI, Anthropic, Ollama; metrics and logging. |
+| [Import & metadata](IMPORT_AND_METADATA.md) | Import docs, metadata in vectors. |
+| [Architecture & design](ARCHITECTURE_AND_DESIGN.md) | API, orchestrator, tools, data flow. |
+| [System design diagrams](SYSTEM_DESIGN_DIAGRAM.md) | Mermaid diagrams: architecture, pipelines, data model. |
+| [Developer guide](DEVELOPER_GUIDE.md) | Code layout, extend tools/agents. |
+| [Testing guide](TESTING_GUIDE.md) | Unit tests, live validation. |
+| [Deployment](DEPLOYMENT.md) | Production: auth, rate limits, scaling. |
+| [Operations](OPERATIONS.md) | Runbooks, backup, monitoring. |
 
 ---
 
-## For operators
+## Screenshots
 
-| Document | Description |
-|----------|-------------|
-| [**Deployment**](DEPLOYMENT.md) | Production deployment: auth, rate limits, cache, async ingest, scaling, monitoring. |
-| [**Operations**](OPERATIONS.md) | Runbooks: scaling, backup/restore, failover, and monitoring (Prometheus, alerts, logging). |
-
----
-
-## Reference
-
-| Document | Description |
-|----------|-------------|
-| [**Architecture**](architecture.md) | High-level diagram and design decisions. |
-| [**Agent prompts**](agent_prompts.md) | Prompts used by query, retrieval, comparison, and summarization agents. |
-| [**Models & observability**](MODELS_AND_OBSERVABILITY.md) | Ollama/OpenAI/Anthropic options and optional LangSmith. |
+| Image | Doc |
+|-------|-----|
+| [frontend.png](screenshot/frontend.png) | [User guide](USER_GUIDE.md) |
+| [swagger.png](screenshot/swagger.png) | [API reference](api_reference.md) |
+| [qdrant.png](screenshot/drant.png) | [Tech stack](TECH_STACK.md) |

@@ -70,6 +70,7 @@ class Book(Base):
     author: Mapped[str] = mapped_column(Text, nullable=False)
     isbn: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
 
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="books")
     editions: Mapped[List["Edition"]] = relationship(
@@ -96,6 +97,7 @@ class Edition(Base):
     publisher: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     version_hash: Mapped[str] = mapped_column(Text, nullable=False)
     ingested_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
 
     book: Mapped["Book"] = relationship("Book", back_populates="editions")
     sections: Mapped[List["Section"]] = relationship(

@@ -44,14 +44,14 @@ async def summarize(
         from src.llm.chat_client import get_chat_client
         from src.llm.prompt_templates import PromptTemplates
         from config import get_settings
-        ollama = get_chat_client()
+        chat_client = get_chat_client()
         prompts = PromptTemplates()
         content = "\n\n---\n\n".join(
             f"Edition: {s.edition_id}\n{s.location_path}\n\n{s.content_text[:4000]}"
             for s in sections
         )
         user = prompts.summarization(summary_type="differences", content=content, max_length=body.max_length)
-        out = ollama.chat_with_system(
+        out = chat_client.chat_with_system(
             model=get_settings().chat_model_for("summarize"),
             system=prompts.SUMMARIZATION_SYSTEM,
             user=user,
@@ -70,14 +70,14 @@ async def summarize(
         from src.llm.chat_client import get_chat_client
         from src.llm.prompt_templates import PromptTemplates
         from config import get_settings
-        ollama = get_chat_client()
+        chat_client = get_chat_client()
         prompts = PromptTemplates()
         user = prompts.summarization(
             summary_type="section",
             content=f"{section.location_path}\n\n{section.content_text}",
             max_length=body.max_length,
         )
-        out = ollama.chat_with_system(
+        out = chat_client.chat_with_system(
             model=get_settings().chat_model_for("summarize"),
             system=prompts.SUMMARIZATION_SYSTEM,
             user=user,

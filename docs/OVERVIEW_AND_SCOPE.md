@@ -60,10 +60,10 @@ All of this works over the **API** (curl, Swagger at `/docs`, or your own app) a
 
 ---
 
-## Where to go next
+## Next
 
-- **I want to use the system** → [User guide](USER_GUIDE.md)  
-- **I want to understand how it’s built** → [Architecture & design](ARCHITECTURE_AND_DESIGN.md)  
-- **I want to develop or extend it** → [Developer guide](DEVELOPER_GUIDE.md)  
-- **I want to test it** → [Testing guide](TESTING_GUIDE.md)  
-- **I want to run it in production** → [Deployment](DEPLOYMENT.md) and [Operations](OPERATIONS.md)
+[User guide](USER_GUIDE.md)  
+- **I want to understand how it’s built** · [Architecture & design](ARCHITECTURE_AND_DESIGN.md)  
+· [Developer guide](DEVELOPER_GUIDE.md)  
+· [Testing guide](TESTING_GUIDE.md)  
+· [Deployment](DEPLOYMENT.md) · [Operations](OPERATIONS.md)

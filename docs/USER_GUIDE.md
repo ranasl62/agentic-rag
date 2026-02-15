@@ -2,7 +2,11 @@
 
 This guide explains how to **upload documents**, **search** across them, and **compare two different editions/versions** of the same book. Examples use **http://localhost:8080** (Docker + Nginx). If you run the API alone, use port **8000** instead.
 
-**Supported documents:** You can feed **any kind of document** the system supports: **PDF** and **plain text (TXT)**. Content can be books, manuals, reports, articles, specifications, or any structured text. The system is not limited to a single domain (e.g. it works for repair manuals, legal docs, technical guides, or general books). For more on scope and capabilities, see [Overview & scope](OVERVIEW_AND_SCOPE.md).
+**Web UI (frontend):** The Next.js app runs at http://localhost:3002 (Docker) or http://localhost:3000 (local dev) and provides a simple interface for upload, search, compare, summarize, and query.
+
+![Web UI](screenshot/frontend.png)
+
+**Supported:** PDF and TXT. Any domain (manuals, books, reports, etc.). See [Overview & scope](OVERVIEW_AND_SCOPE.md).
 
 ---
 

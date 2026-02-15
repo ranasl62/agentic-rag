@@ -6,6 +6,11 @@ Usage:
   uv run python -m scripts.create_tenant "Acme Dealers" acme-dealers
   uv run python -m scripts.create_tenant "My Brand" my-brand
 
+When Postgres runs in Docker, from the host use port 5433 (published port):
+  POSTGRES_PORT=5433 uv run python -m scripts.create_tenant "My Tenant" my-tenant
+Or run inside the stack (uses same env as API):
+  docker compose run --rm api-service python -m scripts.create_tenant "My Tenant" my-tenant
+
 Outputs the API key once; store it securely (only the hash is stored in the DB).
 """
 from __future__ import annotations
@@ -14,6 +19,7 @@ import asyncio
 import hashlib
 import secrets
 import sys
+from datetime import datetime
 from uuid import uuid4
 
 # Ensure project root on path
@@ -54,12 +60,13 @@ async def _run():
         if r.scalar() is not None:
             print(f"Tenant with slug '{slug}' already exists. Choose a different slug.")
             sys.exit(1)
+        now = datetime.utcnow()
         await session.execute(
             text("""
-                INSERT INTO tenants (tenant_id, name, slug, api_key_hash)
-                VALUES (:id, :name, :slug, :api_key_hash)
+                INSERT INTO tenants (tenant_id, name, slug, api_key_hash, created_at)
+                VALUES (:id, :name, :slug, :api_key_hash, :created_at)
             """),
-            {"id": tenant_id, "name": name, "slug": slug, "api_key_hash": key_hash},
+            {"id": tenant_id, "name": name, "slug": slug, "api_key_hash": key_hash, "created_at": now},
         )
         await session.commit()
 
@@ -71,7 +78,18 @@ async def _run():
 
 
 def main():
-    asyncio.run(_run())
+    try:
+        asyncio.run(_run())
+    except Exception as e:
+        err = str(e).lower()
+        if "password" in err or "authentication" in err:
+            print("Database authentication failed. Tips:", file=sys.stderr)
+            print("  - Postgres in Docker is on port 5433 from the host. Run:", file=sys.stderr)
+            print("    POSTGRES_PORT=5433 uv run python -m scripts.create_tenant \"My Tenant\" my-tenant", file=sys.stderr)
+            print("  - Or run inside Docker (uses API env):", file=sys.stderr)
+            print("    docker compose run --rm api-service python -m scripts.create_tenant \"My Tenant\" my-tenant", file=sys.stderr)
+            print("  - Ensure POSTGRES_PASSWORD in .env matches the password used when the Postgres container was first started.", file=sys.stderr)
+        raise
 
 
 if __name__ == "__main__":

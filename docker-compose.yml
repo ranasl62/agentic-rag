@@ -59,20 +59,27 @@ services:
       retries: 5
 
   # Phase 5: PgBouncer so API/Celery don't exhaust Postgres connections
+  # Using edoburu/pgbouncer (Bitnami image no longer available on Docker Hub)
   pgbouncer:
-    image: bitnami/pgbouncer:latest
+    image: edoburu/pgbouncer:latest
     environment:
-      POSTGRESQL_HOST: postgres
-      POSTGRESQL_PORT: "5432"
-      POSTGRESQL_DATABASE: ${POSTGRES_DB:-agentic_rag}
-      POSTGRESQL_USERNAME: ${POSTGRES_USER:-agentic_rag}
-      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD:-change_me_secure_password}
-      PGBOUNCER_PORT: "6432"
-      PGBOUNCER_POOL_MODE: transaction
-      PGBOUNCER_AUTH_TYPE: md5
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${POSTGRES_USER:-agentic_rag}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-change_me_secure_password}
+      DB_NAME: ${POSTGRES_DB:-agentic_rag}
+      POOL_MODE: transaction
+      # Postgres 15 uses SCRAM-SHA-256; PgBouncer must use same so backend auth works (md5 → "wrong password type")
+      AUTH_TYPE: scram-sha-256
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "PGPASSWORD=$$DB_PASSWORD psql -h 127.0.0.1 -p 5432 -U $$DB_USER -d $$DB_NAME -c 'select 1' || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   # Phase 4: Nginx LB in front of API. Single entry point; scale with: docker compose up -d --scale api-service=2
   nginx:
@@ -102,10 +109,12 @@ services:
       - "8000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
     environment:
-      # Phase 5: connect via PgBouncer to avoid exhausting Postgres connections with multiple replicas
+      # Phase 5: connect via PgBouncer (override .env so container uses pgbouncer, not localhost)
       POSTGRES_HOST: pgbouncer
-      POSTGRES_PORT: 6432
+      POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-agentic_rag}
       POSTGRES_USER: ${POSTGRES_USER:-agentic_rag}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_secure_password}
@@ -117,9 +126,21 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Chat/embed provider from .env so UI and search use OpenAI/Anthropic when set
+      CHAT_PROVIDER: ${CHAT_PROVIDER:-ollama}
+      EMBED_PROVIDER: ${EMBED_PROVIDER:-ollama}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL:-gpt-4o-mini}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENAI_EMBED_MODEL: ${OPENAI_EMBED_MODEL:-text-embedding-3-small}
+      REQUIRE_AUTH: ${REQUIRE_AUTH:-false}
+      NEXT_PUBLIC_AGENT_API_KEY: ${NEXT_PUBLIC_AGENT_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_CHAT_MODEL: ${ANTHROPIC_CHAT_MODEL:-}
+      
     depends_on:
       pgbouncer:
-        condition: service_started
+        condition: service_healthy
       qdrant:
         condition: service_started
       redis:
@@ -129,7 +150,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 45s
     command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 
   # Phase 3: async ingestion (optional; run with docker compose up -d celery-worker)
@@ -138,9 +159,11 @@ services:
       context: .
       dockerfile: docker/Dockerfile.api
     restart: on-failure
+    env_file:
+      - .env
     environment:
       POSTGRES_HOST: pgbouncer
-      POSTGRES_PORT: 6432
+      POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-agentic_rag}
       POSTGRES_USER: ${POSTGRES_USER:-agentic_rag}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_secure_password}
@@ -154,7 +177,7 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       pgbouncer:
-        condition: service_started
+        condition: service_healthy
       qdrant:
         condition: service_started
       redis:
@@ -167,6 +190,7 @@ services:
       dockerfile: docker/Dockerfile.web
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+        NEXT_PUBLIC_AGENT_API_KEY: ${NEXT_PUBLIC_AGENT_API_KEY:-}
     restart: on-failure
     environment:
       # So Next server can proxy /api-rag to the API by service name (avoids resolving request host like container id)

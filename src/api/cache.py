@@ -25,9 +25,11 @@ def search_cache_key(
     edition_id: Optional[str],
     limit: int,
     generate_answer: bool = False,
+    include_content: bool = False,
 ) -> str:
     return _cache_key(
-        "search", tenant_id, query or "", book_id or "", edition_id or "", str(limit), str(generate_answer)
+        "search", tenant_id, query or "", book_id or "", edition_id or "",
+        str(limit), str(generate_answer), str(include_content),
     )
 
 
@@ -42,10 +44,11 @@ async def get_search_cached(
     edition_id: Optional[str],
     limit: int,
     generate_answer: bool = False,
+    include_content: bool = False,
 ) -> Optional[Dict[str, Any]]:
     if not get_settings().cache_enabled or get_settings().cache_search_ttl_seconds <= 0:
         return None
-    key = search_cache_key(tenant_id, query, book_id, edition_id, limit, generate_answer)
+    key = search_cache_key(tenant_id, query, book_id, edition_id, limit, generate_answer, include_content)
     return await get_redis_client().get_json(key)
 
 
@@ -57,10 +60,11 @@ async def set_search_cached(
     limit: int,
     value: Dict[str, Any],
     generate_answer: bool = False,
+    include_content: bool = False,
 ) -> None:
     if not get_settings().cache_enabled or get_settings().cache_search_ttl_seconds <= 0:
         return
-    key = search_cache_key(tenant_id, query, book_id, edition_id, limit, generate_answer)
+    key = search_cache_key(tenant_id, query, book_id, edition_id, limit, generate_answer, include_content)
     await get_redis_client().set_json(key, value, ttl_seconds=get_settings().cache_search_ttl_seconds)
 
 

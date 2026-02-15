@@ -39,8 +39,6 @@ The system has four main layers: **API**, **orchestrator + agents**, **tools**, 
    Redis (cache, rate limit, Celery broker)
 ```
 
-More detail: [architecture.md](architecture.md).
-
 ---
 
 ## Design decisions
@@ -63,7 +61,7 @@ More detail: [architecture.md](architecture.md).
 
 1. **Input**: PDF or TXT file; metadata: title, author, edition name (and optional publication year, tenant).
 2. **Parse**: PDF → text extraction; then same path as TXT.
-3. **Structure**: [Structure extractor](architecture.md) detects chapters and sections from headings. Produces a tree: book → edition → chapter → section → (optional) subsection.
+3. **Structure**: The structure extractor detects chapters and sections from headings. Produces a tree: book → edition → chapter → section → (optional) subsection.
 4. **Canonical IDs**: Each section gets a stable `canonical_section_id` from its position (e.g. ch03, sec02) so the same section in another edition can be matched.
 5. **Chunking**: Each section is split into **semantic chunks** (paragraph/sentence boundaries, max size). Each chunk keeps a reference to section and edition.
 6. **Embedding**: Chunk text is embedded (Ollama or OpenAI) and stored in **Qdrant** with payload: tenant_id, book_id, edition_id, section_id, canonical_section_id, etc.

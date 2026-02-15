@@ -1,7 +1,7 @@
 """Compare endpoint: same section across editions."""
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +22,9 @@ async def compare(
     tenant: TenantInfo = Depends(get_current_tenant),
     _=Depends(rate_limit_dependency("compare")),
 ):
+    doc_id = body.get_document_id()
+    if not body.canonical_section_id and not doc_id:
+        raise HTTPException(status_code=400, detail="Either document_id (or book_id) or canonical_section_id is required")
     if body.canonical_section_id:
         qdrant = get_qdrant_storage()
         points = qdrant.scroll_sections_by_canonical(
@@ -53,7 +56,7 @@ async def compare(
             .join(Edition)
             .join(Book)
             .where(Book.tenant_id == tenant.tenant_id)
-            .where(Edition.book_id == UUID(body.book_id))
+            .where(Edition.book_id == UUID(doc_id))
             .where(Section.chapter_number == body.chapter_number)
             .where(Section.section_number == body.section_number)
         )

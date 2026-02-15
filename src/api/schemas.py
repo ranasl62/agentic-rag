@@ -10,19 +10,26 @@ from pydantic import BaseModel, Field
 
 class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1)
-    limit: int = Field(default=10, ge=1, le=50)
-    book_id: Optional[str] = None
+    limit: int = Field(default=20, ge=1, le=100, description="Number of results (default 20, max 100)")
+    document_id: Optional[str] = Field(None, description="Filter by document ID")
+    book_id: Optional[str] = Field(None, description="Deprecated: use document_id")
     edition_id: Optional[str] = None
-    generate_answer: bool = Field(default=False, description="If true, use Ollama to generate a short answer from the retrieved sections")
+    generate_answer: bool = Field(default=False, description="If true, use LLM to generate a short answer from the retrieved sections")
+    include_content: bool = Field(default=False, description="If true, include full section text in each result (from Postgres)")
     skip_cache: bool = Field(default=False, description="If true, bypass cache and run fresh search (Phase 2)")
 
 
 class CompareRequest(BaseModel):
-    book_id: str
+    document_id: Optional[str] = Field(None, description="Document ID to compare across editions")
+    book_id: Optional[str] = Field(None, description="Deprecated: use document_id")
     chapter_number: Optional[int] = None
     section_number: Optional[int] = None
     canonical_section_id: Optional[str] = None
     edition_ids: Optional[List[str]] = None
+
+    def get_document_id(self) -> Optional[str]:
+        """Preferred document ID (document_id or legacy book_id)."""
+        return self.document_id or self.book_id
 
 
 class SummarizeRequest(BaseModel):
@@ -40,17 +47,26 @@ class QueryRequest(BaseModel):
 class Citation(BaseModel):
     section_id: Optional[str] = None
     edition_id: Optional[str] = None
-    book_id: Optional[str] = None
+    document_id: Optional[str] = Field(None, description="Document (book) ID")
     location_path: Optional[str] = None
+    book_title: Optional[str] = None
+    chapter_title: Optional[str] = None
+    section_title: Optional[str] = None
 
 
 class SearchResultItem(BaseModel):
     section_id: Optional[str] = None
     edition_id: Optional[str] = None
-    book_id: Optional[str] = None
+    document_id: Optional[str] = Field(None, description="Document (book) ID")
     location_path: Optional[str] = None
-    content_preview: Optional[str] = None
+    content_preview: Optional[str] = Field(None, description="Short excerpt; use content for full text when include_content=true")
+    content: Optional[str] = Field(None, description="Full section text when include_content=true")
     score: Optional[float] = None
+    book_title: Optional[str] = Field(None, description="Document title")
+    book_author: Optional[str] = None
+    edition_name: Optional[str] = None
+    chapter_title: Optional[str] = None
+    section_title: Optional[str] = None
 
 
 class SearchResponse(BaseModel):
@@ -89,6 +105,17 @@ class BookInfo(BaseModel):
 
 class BooksResponse(BaseModel):
     books: List[BookInfo] = []
+
+
+class DocumentInfo(BaseModel):
+    document_id: str
+    title: str
+    author: str
+    editions: List[Dict[str, Any]]
+
+
+class DocumentsResponse(BaseModel):
+    documents: List[DocumentInfo] = []
 
 
 class SectionInfo(BaseModel):
