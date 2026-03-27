@@ -50,7 +50,7 @@ Details: [Features](docs/FEATURES.md).
 
 ---
 
-## Quick start (minimal)
+## Quick start
 
 1. **Configure**
 
